@@ -10,6 +10,10 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
+  // Add the verification object here
+  verification: {
+    google: "F3WW92_FNlQviz77sKTnTL-EnbLbWuh0P1snZC5e72o",
+  },
   title: {
     default: "LaundryPadi | Book and track your laundry in Enugu",
     template: "%s | LaundryPadi",
