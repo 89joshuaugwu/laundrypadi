@@ -75,12 +75,12 @@ export default function ForBusinessPage() {
       />
 
       <section className="bg-canvas">
-        <div className="container-page grid items-start gap-12 py-12 sm:py-16 lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
+        <div className="container-page grid grid-cols-1 items-start gap-12 py-12 sm:py-16 lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
           <div>
             <p className="animate-rise text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">
               Built for <span className="text-primary">Nigerian laundry businesses</span>
             </p>
-            <h1 className="mt-4 text-[2.5rem] font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+            <h1 className="mt-4 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.5rem]">
               <span className="line-mask">
                 <span className="block animate-word-in" style={{ animationDelay: "60ms", animationDuration: "0.9s" }}>
                   Your laundry shop,
@@ -120,7 +120,7 @@ export default function ForBusinessPage() {
             <Reveal>
               <div className="rounded-lg bg-mint p-4 sm:p-5">
                 <p className="text-sm font-semibold">Proposed launch pricing</p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="rounded-lg bg-white p-4">
                     <p className="font-display text-3xl font-extrabold">
                       <CountUp value={site.pricing.setup} />
@@ -148,7 +148,7 @@ export default function ForBusinessPage() {
           <Reveal>
             <h2 className="max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">Everything a laundry shop needs, nothing it doesn&rsquo;t.</h2>
           </Reveal>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {features.map(({ Icon, title, text }, i) => (
               <Reveal key={title} delay={i * 100}>
                 <div className="group h-full rounded-lg border border-line bg-canvas p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:bg-white hover:shadow-card">

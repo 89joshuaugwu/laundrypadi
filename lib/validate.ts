@@ -23,3 +23,14 @@ export function isIsoDate(value: string): boolean {
 export function normalizeRef(input: string): string {
   return input.toUpperCase().replace(/\s+/g, "").replace(/^([A-Z]{2})(\d)/, "$1-$2");
 }
+
+/** Whole number within [min, max], or null. */
+export function toInt(value: unknown, min: number, max: number): number | null {
+  const n = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+  if (typeof n !== "number" || !Number.isInteger(n) || n < min || n > max) return null;
+  return n;
+}
+
+export function isCloudinaryUrl(value: string): boolean {
+  return value === "" || /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/image\/upload\/.+/.test(value);
+}

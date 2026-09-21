@@ -3,15 +3,18 @@ rules_version = '2';
 // IMPORTANT: publish these in Firebase Console > Firestore Database > Rules > Publish.
 // Rules can not be deployed automatically by AI tools or by `next build`.
 //
-// Model: the browser only ever touches its own profile, and (soon) a shop owner's own shop data.
-// Public pages, guest booking and guest tracking go through Next.js API routes that use the
-// Admin SDK, so bookings/orders/shops are closed to direct browser access by default.
+// Model
+//  - The browser can READ what belongs to the signed-in user (their profile, their shop, their
+//    shop's orders/bookings/customers, or orders linked to their customer account).
+//  - The browser can NOT write orders, bookings, customers or shops. Every write goes through a
+//    Next.js API route that verifies the Firebase ID token and validates the data (Admin SDK).
+//  - Public pages, guest booking and guest tracking also use the Admin SDK on the server.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
 
-    // users/{uid}: profile created at sign-up. Role can be chosen once and never changed by the client.
+    // users/{uid}: profile created at sign-up. Role is chosen once and never changed by the client.
     match /users/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
       allow create: if signedIn() && request.auth.uid == uid
@@ -19,24 +22,42 @@ service cloud.firestore {
         && request.resource.data.role in ['customer', 'owner']
         && request.resource.data.name is string && request.resource.data.name.size() <= 80
         && request.resource.data.email == request.auth.token.email;
+      // Name and phone can be edited by the user. Nothing else.
       allow update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
-        && request.resource.data.name is string && request.resource.data.name.size() <= 80;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && (!('phone' in request.resource.data)
+            || (request.resource.data.phone is string && request.resource.data.phone.matches('^0[789][01][0-9]{8}$')));
       allow delete: if false;
     }
 
-    // Shops: only the owner can read/write directly. The public page is served by the server.
+    // Shops: readable by the owner only (public pages are served by the server). Written by the server.
     match /shops/{shopId} {
       allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow update: if signedIn() && resource.data.ownerId == request.auth.uid
-        && request.resource.data.ownerId == resource.data.ownerId;
-      allow create, delete: if false; // created by the server after onboarding + payment
+      allow write: if false;
     }
 
-    // Orders and bookings: server-only for now. Owner/customer read rules arrive with their dashboards.
-    match /orders/{id}   { allow read, write: if false; }
-    match /bookings/{id} { allow read, write: if false; }
+    // Orders: the shop that owns it, or the customer account it is linked to.
+    match /orders/{ref} {
+      allow read: if signedIn()
+        && (resource.data.ownerId == request.auth.uid || resource.data.customerUid == request.auth.uid);
+      allow write: if false;
+    }
 
+    // Booking requests: the shop, or the customer who sent it while signed in.
+    match /bookings/{ref} {
+      allow read: if signedIn()
+        && (resource.data.ownerId == request.auth.uid || resource.data.customerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // A shop's own customer list.
+    match /customers/{id} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Everything else (counters, etc.) is server-only.
     match /{document=**} { allow read, write: if false; }
   }
 }

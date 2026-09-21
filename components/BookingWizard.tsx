@@ -94,9 +94,12 @@ export function BookingWizard({ shop }: { shop: WizardShop }) {
     setSubmitting(true);
     setSubmitError("");
     try {
+      // If the customer is signed in, the request is linked to their account.
+      const { getFirebaseAuth } = await import("@/lib/firebase"); // loaded only when submitting
+      const token = await getFirebaseAuth()?.currentUser?.getIdToken().catch(() => undefined);
       const res = await fetch("/api/bookings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           shopSlug: shop.slug,
           name,
@@ -211,7 +214,7 @@ export function BookingWizard({ shop }: { shop: WizardShop }) {
         })}
       </ol>
 
-      <form onSubmit={onSubmit} noValidate className="mt-8 grid items-start gap-6 lg:grid-cols-[1.45fr_1fr]">
+      <form onSubmit={onSubmit} noValidate className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.45fr_1fr]">
         <div className="card p-5 sm:p-7">
           <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-extrabold tracking-tight outline-none">
             {step === 0 && "Your details"}

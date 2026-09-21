@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { getCaller } from "@/lib/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getShopBySlug } from "@/lib/shops";
 import type { BookingLine } from "@/lib/types";
@@ -73,6 +74,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ref: makeRef(), total, demo: true });
   }
 
+  // Server-only owner id (public shop data never carries it) and the optional signed-in customer.
+  const rawShop = await db.collection("shops").doc(shop.id).get();
+  const ownerId = typeof rawShop.data()?.ownerId === "string" ? (rawShop.data()!.ownerId as string) : "";
+  const caller = await getCaller(req);
+
   for (let attempt = 0; attempt < 4; attempt++) {
     const ref = makeRef();
     try {
@@ -80,6 +86,8 @@ export async function POST(req: Request) {
         ref,
         shopId: shop.id,
         shopSlug: shop.slug,
+        ownerId,
+        customerUid: caller?.uid ?? null,
         status: "pending",
         customerName: name,
         phone: phoneRaw,
@@ -89,7 +97,7 @@ export async function POST(req: Request) {
         estimatedTotal: total,
         preferredDate: date,
         notes,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       });
       return NextResponse.json({ ok: true, ref, total });
     } catch (err) {

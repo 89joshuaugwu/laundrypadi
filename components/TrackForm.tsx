@@ -59,7 +59,7 @@ export function TrackForm() {
   const balance = order ? Math.max(0, order.total - order.paid) : 0;
 
   return (
-    <div className="container-page grid items-start gap-6 py-8 sm:py-12 lg:grid-cols-[1fr_1.25fr]">
+    <div className="container-page grid grid-cols-1 items-start gap-6 py-8 sm:py-12 lg:grid-cols-[1fr_1.25fr]">
       {/* Form */}
       <div className="card animate-rise p-5 sm:p-7">
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Track your order</h1>

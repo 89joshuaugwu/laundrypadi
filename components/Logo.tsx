@@ -7,10 +7,10 @@ export function Logo({ className = "", priority = false }: { className?: string;
       <Image
         src="/images/logo.png"
         alt="LaundryPadi"
-        width={800}
-        height={137}
+        width={1000}
+        height={232}
         priority={priority}
-        className="h-7 w-auto sm:h-8"
+        className="h-9 w-auto sm:h-10"
       />
     </Link>
   );

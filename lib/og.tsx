@@ -25,7 +25,7 @@ export async function renderOg({ title, subtitle, badge }: { title: string; subt
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} width={72} height={65} alt="" />
+          <img src={src} width={96} height={84} alt="" />
           <div style={{ fontSize: 40, fontWeight: 800 }}>LaundryPadi</div>
         </div>
 

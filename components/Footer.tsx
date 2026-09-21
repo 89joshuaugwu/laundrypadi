@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "./Logo";
 import { site } from "@/lib/site";
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname.startsWith("/owner")) return null; // the dashboard has its own shell
   return (
     <footer className="border-t border-line bg-white">
       <div className="container-page flex flex-col gap-6 py-8 md:flex-row md:items-center md:justify-between">

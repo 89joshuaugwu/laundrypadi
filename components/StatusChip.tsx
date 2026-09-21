@@ -1,13 +1,17 @@
 import type { OrderStatus } from "@/lib/types";
 
-const styles: Record<OrderStatus, string> = {
+export type ChipStatus = OrderStatus | "overdue";
+
+const styles: Record<ChipStatus, string> = {
+  overdue: "bg-[#FBE5E1] text-[#8F2417]",
   received: "bg-[#E4EDF9] text-[#1F4B8A]",
   washing: "bg-[#DDEFFA] text-[#0B5680]",
   ready: "bg-[#D6F0DE] text-[#0A5F34]",
   collected: "bg-[#ECF0ED] text-[#42544F]",
 };
 
-const labels: Record<OrderStatus, string> = {
+const labels: Record<ChipStatus, string> = {
+  overdue: "Overdue",
   received: "Received",
   washing: "Washing",
   ready: "Ready",
@@ -19,7 +23,7 @@ export function StatusChip({
   label,
   className = "",
 }: {
-  status: OrderStatus;
+  status: ChipStatus;
   label?: string;
   className?: string;
 }) {

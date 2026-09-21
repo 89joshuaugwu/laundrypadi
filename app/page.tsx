@@ -60,7 +60,7 @@ export default function HomePage() {
               Cleaner days for a brighter you
             </p>
 
-            <h1 className="mt-4 text-[2.75rem] font-extrabold leading-[1.02] tracking-tight text-ink sm:text-6xl lg:text-[4.25rem]">
+            <h1 className="mt-4 text-[2.4rem] font-extrabold leading-[1.04] tracking-tight text-ink sm:text-6xl lg:text-[4.25rem]">
               <span className="line-mask">
                 <span className="block animate-word-in" style={{ animationDelay: "80ms", animationDuration: "0.9s" }}>
                   Fresh clothes.
@@ -132,7 +132,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">How it works</h2>
           </Reveal>
 
-          <ol className="mt-10 grid gap-8 md:grid-cols-3 md:gap-6">
+          <ol className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">
             {steps.map((step, i) => (
               <li key={step.title}>
                 <Reveal delay={i * 140} className="relative flex items-center gap-4">
@@ -158,7 +158,7 @@ export default function HomePage() {
 
       {/* ---------- Tracking ---------- */}
       <section className="bg-canvas">
-        <div className="container-page grid items-center gap-10 py-16 sm:py-20 lg:grid-cols-2 lg:gap-16">
+        <div className="container-page grid grid-cols-1 items-center gap-10 py-16 sm:py-20 lg:grid-cols-2 lg:gap-16">
           <Reveal>
             <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
               Know where your laundry is, without calling the shop.

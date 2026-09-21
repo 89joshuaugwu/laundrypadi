@@ -7,6 +7,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/login" },
 };
 
-export default function LoginPage() {
-  return <AuthForms initial="login" />;
+export default function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
+  return <AuthForms initial="login" next={searchParams.next} />;
 }

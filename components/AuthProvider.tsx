@@ -3,13 +3,46 @@
 import type { User } from "firebase/auth";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-interface AuthState {
-  user: User | null;
-  ready: boolean;
-  signOut: () => Promise<void>;
+export interface Profile {
+  role: "customer" | "owner";
+  name: string;
+  phone: string;
 }
 
-const AuthContext = createContext<AuthState>({ user: null, ready: false, signOut: async () => {} });
+interface AuthState {
+  user: User | null;
+  profile: Profile | null;
+  /** True once we know whether someone is signed in AND (if so) their profile has loaded. */
+  ready: boolean;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthState>({
+  user: null,
+  profile: null,
+  ready: false,
+  signOut: async () => {},
+  refreshProfile: async () => {},
+});
+
+async function loadProfile(uid: string): Promise<Profile | null> {
+  try {
+    const [{ doc, getDoc }, { getDb }] = await Promise.all([import("firebase/firestore"), import("@/lib/firebase")]);
+    const db = getDb();
+    if (!db) return null;
+    const snap = await getDoc(doc(db, "users", uid));
+    if (!snap.exists()) return null;
+    const d = snap.data();
+    return {
+      role: d.role === "owner" ? "owner" : "customer",
+      name: typeof d.name === "string" ? d.name : "",
+      phone: typeof d.phone === "string" ? d.phone : "",
+    };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Firebase is imported lazily, after first paint, so it never blocks the initial render
@@ -17,6 +50,7 @@ const AuthContext = createContext<AuthState>({ user: null, ready: false, signOut
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -34,8 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setReady(true);
         return;
       }
-      unsubscribe = onAuthStateChanged(auth, (u) => {
+      unsubscribe = onAuthStateChanged(auth, async (u) => {
+        if (!u) {
+          setUser(null);
+          setProfile(null);
+          setReady(true);
+          return;
+        }
+        setReady(false);
         setUser(u);
+        const p = await loadProfile(u.uid);
+        if (cancelled) return;
+        setProfile(p);
         setReady(true);
       });
     })();
@@ -55,7 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (auth) await fbSignOut(auth);
   }, []);
 
-  const value = useMemo(() => ({ user, ready, signOut }), [user, ready, signOut]);
+  const refreshProfile = useCallback(async () => {
+    const { getFirebaseAuth } = await import("@/lib/firebase");
+    const u = getFirebaseAuth()?.currentUser;
+    if (u) setProfile(await loadProfile(u.uid));
+  }, []);
+
+  const value = useMemo(() => ({ user, profile, ready, signOut, refreshProfile }), [user, profile, ready, signOut, refreshProfile]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

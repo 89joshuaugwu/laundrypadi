@@ -14,6 +14,7 @@ html {
 
 body {
   @apply bg-canvas font-sans text-ink antialiased;
+  overflow-x: clip;
   text-rendering: optimizeLegibility;
 }
 
@@ -137,5 +138,23 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   .reveal .draw-line {
     transform: none;
+  }
+}
+
+/* Receipts print on their own page */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #receipt-print,
+  #receipt-print * {
+    visibility: visible;
+  }
+  #receipt-print {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    box-shadow: none !important;
+    border: 0 !important;
   }
 }

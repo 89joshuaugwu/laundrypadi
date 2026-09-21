@@ -45,7 +45,7 @@ export default async function ShopPage({ params }: Props) {
       />
 
       <section className="bg-white">
-        <div className="container-page grid items-center gap-8 py-8 sm:py-12 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+        <div className="container-page grid grid-cols-1 items-center gap-8 py-8 sm:py-12 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
           <div className="animate-rise relative aspect-[4/3] overflow-hidden rounded-lg bg-mint sm:aspect-[16/10]">
             {shop.coverUrl ? (
               <Image
@@ -57,7 +57,7 @@ export default async function ShopPage({ params }: Props) {
                 className="object-cover object-[80%_50%]"
               />
             ) : (
-              <Image src="/images/logo-mark.png" alt="" width={96} height={87} className="absolute inset-0 m-auto opacity-60" />
+              <Image src="/images/logo-mark.png" alt="" width={96} height={84} className="absolute inset-0 m-auto opacity-60" />
             )}
           </div>
 
@@ -110,7 +110,7 @@ export default async function ShopPage({ params }: Props) {
       </section>
 
       <section className="bg-canvas">
-        <div className="container-page grid gap-5 py-10 sm:py-14 md:grid-cols-2">
+        <div className="container-page grid grid-cols-1 gap-5 py-10 sm:py-14 md:grid-cols-2">
           <Reveal>
             <div className="h-full rounded-lg border border-line bg-white p-5 sm:p-6">
               <h2 className="text-lg font-bold">Price list</h2>
