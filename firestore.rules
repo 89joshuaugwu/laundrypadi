@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// IMPORTANT: publish these in Firebase Console > Firestore Database > Rules > Publish.
+// Rules can not be deployed automatically by AI tools or by `next build`.
+//
+// Model: the browser only ever touches its own profile, and (soon) a shop owner's own shop data.
+// Public pages, guest booking and guest tracking go through Next.js API routes that use the
+// Admin SDK, so bookings/orders/shops are closed to direct browser access by default.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // users/{uid}: profile created at sign-up. Role can be chosen once and never changed by the client.
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'createdAt'])
+        && request.resource.data.role in ['customer', 'owner']
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.email == request.auth.token.email;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80;
+      allow delete: if false;
+    }
+
+    // Shops: only the owner can read/write directly. The public page is served by the server.
+    match /shops/{shopId} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn() && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId;
+      allow create, delete: if false; // created by the server after onboarding + payment
+    }
+
+    // Orders and bookings: server-only for now. Owner/customer read rules arrive with their dashboards.
+    match /orders/{id}   { allow read, write: if false; }
+    match /bookings/{id} { allow read, write: if false; }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

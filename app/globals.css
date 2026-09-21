@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply bg-canvas font-sans text-ink antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  @apply font-display;
+}
+
+:focus-visible {
+  outline: 2px solid #087f6d;
+  outline-offset: 3px;
+}
+
+::selection {
+  background: #c9e9d8;
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex h-12 select-none items-center justify-center gap-2 rounded px-5 font-display text-[15px] font-semibold leading-none transition duration-300 ease-out;
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    @apply cursor-not-allowed opacity-60;
+  }
+  .btn[aria-busy="true"] {
+    @apply pointer-events-none opacity-90;
+  }
+  .btn-primary {
+    @apply bg-primary text-white shadow-[0_6px_16px_-8px_rgba(8,127,109,0.8)] hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-[0_10px_20px_-10px_rgba(8,127,109,0.9)] active:translate-y-0;
+  }
+  .btn-outline {
+    @apply border border-ink/25 bg-white text-ink hover:-translate-y-0.5 hover:border-primary hover:text-primary active:translate-y-0;
+  }
+  .btn-sm {
+    @apply h-10 px-4 text-sm;
+  }
+
+  /* ---------- Surfaces ---------- */
+  .card {
+    @apply rounded-lg border border-line bg-white shadow-card;
+  }
+
+  /* ---------- Forms ---------- */
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+  .input {
+    @apply h-12 w-full rounded border border-line bg-white px-4 text-[15px] text-ink placeholder:text-ink-soft/70 transition duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25;
+  }
+  textarea.input {
+    @apply h-auto min-h-[96px] py-3;
+  }
+  .input[aria-invalid="true"] {
+    @apply border-danger focus:border-danger focus:ring-danger/20;
+  }
+  .field-error {
+    @apply mt-1.5 flex items-start gap-1.5 text-sm text-danger;
+  }
+  .field-hint {
+    @apply mt-1.5 text-sm text-ink-soft;
+  }
+
+  .skeleton {
+    @apply animate-shimmer rounded bg-[length:400%_100%];
+    background-image: linear-gradient(90deg, #eef2ef 25%, #f8faf8 37%, #eef2ef 63%);
+  }
+}
+
+/* ---------- Scroll reveal (below the fold only; hero uses CSS-only entrance) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero headline lines slide up from a mask */
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+/* Accessible motion: everything settles into its final state */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Dotted connector that draws in when its Reveal parent enters the viewport */
+.reveal .draw-line {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1s var(--ease) 0.45s;
+}
+.reveal.is-in .draw-line {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal .draw-line {
+    transform: none;
+  }
+}
