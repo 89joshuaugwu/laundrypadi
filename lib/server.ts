@@ -21,7 +21,9 @@ export async function getCaller(req: Request): Promise<Caller | null> {
   const auth = getAdminAuth();
   if (!m || !auth) return null;
   try {
-    const t = await auth.verifyIdToken(m[1]);
+    // checkRevoked=true: a disabled or force-signed-out account is rejected immediately,
+    // even mid-session, instead of waiting up to an hour for its ID token to expire.
+    const t = await auth.verifyIdToken(m[1], true);
     return { uid: t.uid, email: t.email ?? null };
   } catch {
     return null;
@@ -31,6 +33,7 @@ export async function getCaller(req: Request): Promise<Caller | null> {
 export interface OwnerContext {
   db: Firestore;
   uid: string;
+  email: string | null;
   shopId: string;
   shop: DocumentData;
 }
@@ -39,7 +42,7 @@ export interface OwnerContext {
 export async function authOwner(
   req: Request,
   needShop = true,
-): Promise<{ ctx: OwnerContext | { db: Firestore; uid: string; shopId: ""; shop: null } } | { res: NextResponse }> {
+): Promise<{ ctx: OwnerContext | { db: Firestore; uid: string; email: string | null; shopId: ""; shop: null } } | { res: NextResponse }> {
   const db = getAdminDb();
   if (!db) return { res: jsonError("The server is not connected to Firebase yet.", 503) };
   const caller = await getCaller(req);
@@ -52,9 +55,34 @@ export async function authOwner(
   const snap = await db.collection("shops").where("ownerId", "==", caller.uid).limit(1).get();
   if (snap.empty) {
     if (needShop) return { res: jsonError("Set up your shop first.", 409) };
-    return { ctx: { db, uid: caller.uid, shopId: "", shop: null } };
+    return { ctx: { db, uid: caller.uid, email: caller.email, shopId: "", shop: null } };
   }
-  return { ctx: { db, uid: caller.uid, shopId: snap.docs[0].id, shop: snap.docs[0].data() } };
+  const shopData = snap.docs[0].data();
+  if (shopData.suspended === true) return { res: jsonError("Your shop has been suspended. Contact LaundryPadi support for help.", 403) };
+  return { ctx: { db, uid: caller.uid, email: caller.email, shopId: snap.docs[0].id, shop: shopData } };
+}
+
+export interface AdminContext {
+  db: Firestore;
+  uid: string;
+  email: string;
+}
+
+/**
+ * Platform admin. Deliberately NOT a Firestore `role` field (those are client-writable at
+ * sign-up and only ever "customer" or "owner" by rule) — it is an email allowlist held only in
+ * the server environment, so it can never be granted by editing a document.
+ */
+export async function authAdmin(req: Request): Promise<{ ctx: AdminContext } | { res: NextResponse }> {
+  const db = getAdminDb();
+  if (!db) return { res: jsonError("The server is not connected to Firebase yet.", 503) };
+  const caller = await getCaller(req);
+  if (!caller?.email) return { res: jsonError("Please sign in again.", 401) };
+  if (!rateLimit(`admin:${caller.uid}`, 240)) return { res: jsonError("Too many requests. Slow down a little.", 429) };
+
+  const allow = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  if (!allow.includes(caller.email.toLowerCase())) return { res: jsonError("You do not have access to this area.", 403) };
+  return { ctx: { db, uid: caller.uid, email: caller.email } };
 }
 
 /** Next order reference, LP-1001, LP-1002, ... shared across all shops so a reference is globally unique. */

@@ -3,7 +3,7 @@ import { getFirebaseAuth } from "./firebase";
 /** Calls one of our API routes with the signed-in user's Firebase ID token. Throws Error(message) on failure. */
 export async function apiFetch<T = Record<string, unknown>>(
   path: string,
-  init: { method?: "POST" | "PATCH" | "PUT"; body?: unknown } = {},
+  init: { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; body?: unknown } = {},
 ): Promise<T> {
   const user = getFirebaseAuth()?.currentUser;
   if (!user) throw new Error("Please sign in again.");

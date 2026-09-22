@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { METHOD_LABEL, type PaymentMethod } from "@/lib/models";
 import { authOwner, jsonError, newId } from "@/lib/server";
+import { notify } from "@/lib/push";
 import { formatNaira, todayLagos } from "@/lib/site";
 import { ORDER_STEPS, type OrderStatus } from "@/lib/types";
 import { cleanText, isIsoDate, normalizeRef, toInt } from "@/lib/validate";
 
 export const runtime = "nodejs";
 
-type Result = { error: string; status: number } | { ok: true };
+type Result = { error: string; status: number } | { ok: true; notify?: { customerUid: string | null; title: string; body: string; url: string } };
 
 /** Change status, record a payment, or edit the collection date / notes. Runs in a transaction so two taps never double-count. */
 export async function PATCH(req: Request, { params }: { params: { ref: string } }) {
@@ -43,7 +44,16 @@ export async function PATCH(req: Request, { params }: { params: { ref: string } 
       });
       activity.push({ at: now, text: `Marked as ${status.label}` });
       tx.update(docRef, { status: status.status, timeline, activity, updatedAt: now });
-      return { ok: true };
+      const messages: Partial<Record<string, string>> = {
+        washing: "is now being washed.",
+        ready: "is ready for collection!",
+        collected: "has been marked collected. Thank you!",
+      };
+      const body = messages[status.status];
+      return {
+        ok: true,
+        ...(body ? { notify: { customerUid: (o.customerUid as string | null) ?? null, title: `Order ${ref}`, body: `${o.shopName ? `${o.shopName}: ` : ""}Your order ${body}`, url: `/account/orders/${ref}` } } : {}),
+      };
     }
 
     if (b.action === "payment") {
@@ -75,5 +85,6 @@ export async function PATCH(req: Request, { params }: { params: { ref: string } 
   });
 
   if ("error" in result) return jsonError(result.error, result.status);
+  if (result.notify) await notify(db, result.notify.customerUid, result.notify);
   return NextResponse.json({ ok: true });
 }

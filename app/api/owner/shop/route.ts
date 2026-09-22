@@ -77,7 +77,10 @@ export async function POST(req: Request) {
       coverUrl,
       services,
       published: true,
-      subscription: { plan: "launch", monthly: 5000, setupFee: 15000, setupPaid: false, status: "pending", nextInvoice: "" },
+      subscription: { plan: "launch", monthly: 5000, setupFee: 15000, setupPaid: false, status: "pending", nextInvoice: "", lastPaymentAt: "" },
+      suspended: false,
+      suspendedReason: "",
+      suspendedAt: "",
       createdAt: new Date().toISOString(),
     });
   } catch (err) {

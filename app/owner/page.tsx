@@ -3,9 +3,11 @@
 import { ArrowRight, Inbox, Package, Plus, Shirt, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import { NotifyBanner } from "@/components/NotifyBanner";
 import { OrderTable } from "@/components/owner/OrderTable";
 import { useOwner } from "@/components/owner/OwnerProvider";
 import { EmptyState, StatCard } from "@/components/ui";
+import { BILLING_ENFORCED, billingOk } from "@/lib/billing-shared";
 import { balanceOf } from "@/lib/models";
 import { formatNaira, greeting, todayLagos } from "@/lib/site";
 
@@ -32,6 +34,8 @@ export default function OverviewPage() {
         </div>
         <Link href="/owner/orders/new" className="btn btn-primary"><Plus aria-hidden="true" className="h-5 w-5" />New order</Link>
       </div>
+
+      <NotifyBanner storageKey="lp-notify-dismissed-owner" text="Get notified the moment a new booking request comes in." />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard icon={<Package aria-hidden="true" className="h-6 w-6" />} label="Active orders" value={active} tone="blue" />

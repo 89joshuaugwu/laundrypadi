@@ -11,7 +11,7 @@ import {
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AlertCircle, Eye, EyeOff, Info, Loader2, Store, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { getDb, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { postAuthPath } from "@/lib/site";
 import { useAuth } from "./AuthProvider";
@@ -52,6 +52,8 @@ function friendlyError(err: unknown): string {
       return "Google sign-in is not enabled for this website address yet.";
     case "auth/operation-not-allowed":
       return "Google sign-in is not switched on yet.";
+    case "auth/user-disabled":
+      return "This account has been disabled. Contact LaundryPadi support.";
     default:
       return "Something went wrong. Please try again.";
   }
@@ -412,7 +414,19 @@ export function AuthForms({ initial, initialRole = "customer", next }: { initial
   const [view, setView] = useState<View>(initial);
   const [leaving, setLeaving] = useState(false);
   const [dir, setDir] = useState<"forward" | "back">("forward");
+  const [disabledNotice, setDisabledNotice] = useState(false);
   const { user } = useAuth();
+
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem("lp-account-disabled") === "1") {
+        setDisabledNotice(true);
+        window.sessionStorage.removeItem("lp-account-disabled");
+      }
+    } catch {
+      /* private browsing: nothing to clean up */
+    }
+  }, []);
 
   function switchTo(target: View) {
     if (target === view || leaving) return;
@@ -441,6 +455,7 @@ export function AuthForms({ initial, initialRole = "customer", next }: { initial
           </div>
         )}
         {user && <div className="mb-5 rounded-lg bg-mint p-4 text-sm" role="status">You&rsquo;re already signed in as <span className="font-semibold">{user.email}</span>.</div>}
+        {disabledNotice && <Alert>This account has been disabled. Contact LaundryPadi support if you think this is a mistake.</Alert>}
 
         {/* Sliding switch */}
         <div role="tablist" aria-label="Account" className="relative mb-5 grid grid-cols-2 rounded-lg border border-line bg-white p-1">

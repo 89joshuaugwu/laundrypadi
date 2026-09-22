@@ -1,7 +1,7 @@
 "use client";
 
 import { collection, limit, onSnapshot, query, where } from "firebase/firestore";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getDb } from "@/lib/firebase";
 import {
   toBooking,
@@ -14,6 +14,7 @@ import {
   type OwnerShop,
 } from "@/lib/models";
 import { useAuth } from "../AuthProvider";
+import { useToast } from "../ToastProvider";
 
 interface OwnerData {
   loading: boolean;
@@ -31,12 +32,14 @@ export const useOwner = () => useContext(Ctx);
 /** Live (real-time) data for the signed-in shop owner. Firestore rules only ever return their own documents. */
 export function OwnerProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [shop, setShop] = useState<OwnerShop | null>(null);
   const [orders, setOrders] = useState<OrderDoc[]>([]);
   const [bookings, setBookings] = useState<BookingDoc[]>([]);
   const [customers, setCustomers] = useState<CustomerDoc[]>([]);
   const [loaded, setLoaded] = useState({ shop: false, orders: false, bookings: false, customers: false });
   const [error, setError] = useState("");
+  const seenPending = useRef<Set<string> | null>(null);
 
   useEffect(() => {
     const db = getDb();
@@ -55,7 +58,18 @@ export function OwnerProvider({ children }: { children: ReactNode }) {
         mark("orders");
       }, fail),
       onSnapshot(mine("bookings"), (snap) => {
-        setBookings(snap.docs.map((d) => toBooking(d.data())).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+        const list = snap.docs.map((d) => toBooking(d.data())).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        const pendingNow = new Set(list.filter((b) => b.status === "pending").map((b) => b.ref));
+        if (seenPending.current) {
+          for (const ref of pendingNow) {
+            if (!seenPending.current.has(ref)) {
+              const b = list.find((x) => x.ref === ref);
+              if (b) toast({ title: "New booking request", body: `${b.customerName} · ${b.items.map((i) => `${i.qty} ${i.name.toLowerCase()}`).join(", ")}`, href: "/owner/orders?tab=requests" });
+            }
+          }
+        }
+        seenPending.current = pendingNow;
+        setBookings(list);
         mark("bookings");
       }, fail),
       onSnapshot(mine("customers"), (snap) => {
@@ -64,7 +78,7 @@ export function OwnerProvider({ children }: { children: ReactNode }) {
       }, fail),
     ];
     return () => offs.forEach((off) => off());
-  }, [user]);
+  }, [user, toast]);
 
   const value = useMemo<OwnerData>(
     () => ({

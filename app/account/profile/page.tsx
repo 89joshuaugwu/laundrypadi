@@ -6,6 +6,7 @@ import { ChevronRight, Eye, EyeOff, HelpCircle, KeyRound, Loader2, LogOut } from
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { NotificationsToggle } from "@/components/NotificationsToggle";
 import { useAuth } from "@/components/AuthProvider";
 import { Alert } from "@/components/ui";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
@@ -117,7 +118,12 @@ export default function ProfilePage() {
         </button>
       </form>
 
-      <section className="card mt-6 animate-rise overflow-hidden" style={{ animationDelay: "160ms" }}>
+      <section className="mt-6 animate-rise" style={{ animationDelay: "140ms" }}>
+        <h2 className="mb-3 text-lg font-bold">Notifications</h2>
+        <NotificationsToggle label="Order updates" />
+      </section>
+
+      <section className="card mt-6 animate-rise overflow-hidden" style={{ animationDelay: "200ms" }}>
         <h2 className="px-5 pt-5 text-lg font-bold sm:px-7">Account settings</h2>
         <ul className="mt-3 divide-y divide-line border-t border-line">
           <li><button type="button" onClick={onChangePassword} className={row}><KeyRound aria-hidden="true" className="h-5 w-5 text-ink-soft" /><span className="flex-1 font-semibold">Change password</span><ChevronRight aria-hidden="true" className="h-4 w-4 text-ink-soft" /></button></li>

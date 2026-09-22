@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { OrderDoc, OrderItem } from "@/lib/models";
 import { authOwner, itemsLabelOf, jsonError, nextOrderRef, upsertCustomer } from "@/lib/server";
+import { notify } from "@/lib/push";
 import { todayLagos } from "@/lib/site";
 import { cleanText, isIsoDate, toInt } from "@/lib/validate";
 
@@ -31,6 +32,11 @@ export async function POST(req: Request, { params }: { params: { ref: string } }
 
   if (b.action === "decline") {
     await bookingRef.update({ status: "declined", respondedAt: new Date().toISOString() });
+    await notify(db, typeof bk.customerUid === "string" ? bk.customerUid : null, {
+      title: "Booking request declined",
+      body: `${shop.name} could not take your request ${params.ref.toUpperCase()}. Contact the shop for details.`,
+      url: "/account/orders",
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -85,5 +91,14 @@ export async function POST(req: Request, { params }: { params: { ref: string } }
   });
 
   if ("error" in result) return jsonError(result.error, result.status);
+  await notify(db, typeof bk.customerUid === "string" ? bk.customerUid : null, {
+    title: "Booking accepted",
+    body: `${shop.name} confirmed your request. Order ${orderRef} is now ${formatNairaShort(confirmed)}.`,
+    url: `/account/orders/${orderRef}`,
+  });
   return NextResponse.json({ ok: true, ref: orderRef });
+}
+
+function formatNairaShort(n: number): string {
+  return "\u20A6" + new Intl.NumberFormat("en-NG").format(n);
 }

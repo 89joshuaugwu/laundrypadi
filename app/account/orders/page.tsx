@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { StatusChip } from "@/components/StatusChip";
+import { NotifyBanner } from "@/components/NotifyBanner";
 import { useMyOrders } from "@/components/useMyOrders";
 import { Alert, EmptyState, PillTabs } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
@@ -86,6 +87,10 @@ export default function MyOrdersPage() {
         <button type="button" onClick={() => setShowAdd((v) => !v)} aria-expanded={showAdd} className="btn btn-outline btn-sm">
           <Plus aria-hidden="true" className="h-4 w-4" /> Add an order
         </button>
+      </div>
+
+      <div className="mt-5">
+        <NotifyBanner storageKey="lp-notify-dismissed-customer" text="Get notified the moment your order status changes." />
       </div>
 
       <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${showAdd ? "mt-5 grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>

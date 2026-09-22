@@ -87,6 +87,7 @@ export interface Subscription {
   setupPaid: boolean;
   status: string;
   nextInvoice: string;
+  lastPaymentAt: string;
 }
 
 export interface OwnerShop {
@@ -105,6 +106,9 @@ export interface OwnerShop {
   coverUrl: string;
   services: Service[];
   subscription: Subscription;
+  suspended: boolean;
+  suspendedReason: string;
+  suspendedAt: string;
   createdAt: string;
 }
 
@@ -216,7 +220,11 @@ export function toOwnerShop(id: string, d: Record<string, unknown>): OwnerShop {
       setupPaid: sub.setupPaid === true,
       status: s(sub.status, "pending"),
       nextInvoice: s(sub.nextInvoice),
+      lastPaymentAt: s(sub.lastPaymentAt),
     },
+    suspended: d.suspended === true,
+    suspendedReason: s(d.suspendedReason),
+    suspendedAt: iso(d.suspendedAt),
     createdAt: iso(d.createdAt),
   };
 }

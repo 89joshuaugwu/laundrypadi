@@ -7,8 +7,9 @@ import { useEffect, useRef, useState } from "react";
 import { navLinks } from "@/lib/site";
 import { useAuth } from "./AuthProvider";
 import { Logo } from "./Logo";
+import { useReadyCount } from "./useReadyCount";
 
-function UserMenu({ name, isOwner, onSignOut }: { name: string; isOwner: boolean; onSignOut: () => void }) {
+function UserMenu({ name, isOwner, readyCount, onSignOut }: { name: string; isOwner: boolean; readyCount: number; onSignOut: () => void }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
 
@@ -32,9 +33,16 @@ function UserMenu({ name, isOwner, onSignOut }: { name: string; isOwner: boolean
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 items-center gap-2 rounded-full border border-line bg-white pl-1 pr-3 transition-colors hover:border-primary"
+        className="relative flex h-10 items-center gap-2 rounded-full border border-line bg-white pl-1 pr-3 transition-colors hover:border-primary"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary font-display text-sm font-bold text-white">{name.charAt(0).toUpperCase()}</span>
+        <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-primary font-display text-sm font-bold text-white">
+          {name.charAt(0).toUpperCase()}
+          {readyCount > 0 && (
+            <span aria-hidden="true" className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-citrus px-1 font-display text-[10px] font-bold text-ink ring-2 ring-white">
+              {readyCount}
+            </span>
+          )}
+        </span>
         <span className="hidden max-w-[110px] truncate text-sm font-semibold lg:block">Hi, {name}</span>
         <ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
       </button>
@@ -44,7 +52,10 @@ function UserMenu({ name, isOwner, onSignOut }: { name: string; isOwner: boolean
             <Link role="menuitem" href="/owner" className={item} onClick={() => setOpen(false)}><LayoutDashboard aria-hidden="true" className="h-4 w-4" />Dashboard</Link>
           ) : (
             <>
-              <Link role="menuitem" href="/account/orders" className={item} onClick={() => setOpen(false)}><PackageSearch aria-hidden="true" className="h-4 w-4" />My orders</Link>
+              <Link role="menuitem" href="/account/orders" className={item} onClick={() => setOpen(false)}>
+                <PackageSearch aria-hidden="true" className="h-4 w-4" />My orders
+                {readyCount > 0 && <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">{readyCount} ready</span>}
+              </Link>
               <Link role="menuitem" href="/account/profile" className={item} onClick={() => setOpen(false)}><UserIcon aria-hidden="true" className="h-4 w-4" />Profile</Link>
             </>
           )}
@@ -59,6 +70,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, ready, signOut } = useAuth();
+  const readyCount = useReadyCount();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -121,7 +133,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           {signedIn ? (
-            <UserMenu name={name} isOwner={isOwner} onSignOut={handleSignOut} />
+            <UserMenu name={name} isOwner={isOwner} readyCount={readyCount} onSignOut={handleSignOut} />
           ) : (
             <Link href="/login" className="btn btn-outline btn-sm">Sign in</Link>
           )}
@@ -153,8 +165,9 @@ export function Navbar() {
             ))}
             {signedIn && (
               <>
-                <Link href={isOwner ? "/owner" : "/account/orders"} className="rounded px-1 py-3 font-display text-base font-semibold text-ink">
+                <Link href={isOwner ? "/owner" : "/account/orders"} className="flex items-center gap-2 rounded px-1 py-3 font-display text-base font-semibold text-ink">
                   {isOwner ? "Dashboard" : "My orders"}
+                  {!isOwner && readyCount > 0 && <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">{readyCount} ready</span>}
                 </Link>
                 {!isOwner && <Link href="/account/profile" className="rounded px-1 py-3 font-display text-base font-semibold text-ink">Profile</Link>}
               </>

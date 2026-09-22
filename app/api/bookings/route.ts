@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getCaller } from "@/lib/server";
+import { notify } from "@/lib/push";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getShopBySlug } from "@/lib/shops";
 import type { BookingLine } from "@/lib/types";
@@ -98,6 +99,12 @@ export async function POST(req: Request) {
         preferredDate: date,
         notes,
         createdAt: new Date().toISOString(),
+      });
+      await notify(db, ownerId || null, {
+        title: "New booking request",
+        body: `${name} wants to book ${lines.map((l) => `${l.qty} ${l.name.toLowerCase()}`).join(", ")}.`,
+        url: "/owner/orders?tab=requests",
+        tag: "booking-request",
       });
       return NextResponse.json({ ok: true, ref, total });
     } catch (err) {

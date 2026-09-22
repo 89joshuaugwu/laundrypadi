@@ -1,18 +1,20 @@
 "use client";
 
 import { sendPasswordResetEmail } from "firebase/auth";
-import { CheckCircle2, Download, HelpCircle, KeyRound, Loader2, LogOut } from "lucide-react";
+import { Download, HelpCircle, KeyRound, Loader2, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { ImageUpload } from "@/components/owner/ImageUpload";
+import { NotificationsToggle } from "@/components/NotificationsToggle";
 import { useOwner } from "@/components/owner/OwnerProvider";
+import { SubscriptionPanel } from "@/components/owner/SubscriptionPanel";
 import { Alert, CopyButton, PillTabs, Toggle } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { DAYS, splitHours, TIMES } from "@/lib/hours";
-import { formatNaira, prettyPhone, site } from "@/lib/site";
+import { prettyPhone, site } from "@/lib/site";
 
 type Tab = "profile" | "account" | "subscription";
 
@@ -36,6 +38,15 @@ export default function SettingsPage() {
   const [done, setDone] = useState("");
   const [toggling, setToggling] = useState(false);
   const [pwMsg, setPwMsg] = useState("");
+  const [justPaid, setJustPaid] = useState(false);
+
+  // Returning from Paystack lands on ?tab=subscription&billing=success
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const t = p.get("tab");
+    if (t === "profile" || t === "account" || t === "subscription") setTab(t);
+    if (p.get("billing") === "success") setJustPaid(true);
+  }, []);
 
   const shopId = shop?.id;
   useEffect(() => {
@@ -152,6 +163,10 @@ export default function SettingsPage() {
 
       {tab === "account" && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
+          <section className="lg:col-span-2">
+            <h2 className="mb-3 text-lg font-bold">Notifications</h2>
+            <NotificationsToggle label="New booking requests" />
+          </section>
           <section className="card overflow-hidden">
             <h2 className="p-5 pb-3 text-lg font-bold sm:px-6">Account</h2>
             <p className="px-5 pb-4 text-sm text-ink-soft sm:px-6">Signed in as <span className="font-semibold text-ink">{user?.email}</span></p>
@@ -171,20 +186,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {tab === "subscription" && (
-        <section className="card max-w-xl space-y-4 p-5 sm:p-7">
-          <h2 className="text-lg font-bold">Subscription</h2>
-          <div className="rounded-lg bg-mint p-4">
-            <p className="text-sm text-ink-soft">Launch plan</p>
-            <p className="font-display text-3xl font-extrabold tabular-nums">{formatNaira(shop.subscription.monthly)} <span className="text-base font-bold">/ month</span></p>
-          </div>
-          <dl className="divide-y divide-line text-sm">
-            <div className="flex items-center justify-between py-3"><dt className="text-ink-soft">One-time setup fee</dt><dd className="flex items-center gap-2 font-semibold tabular-nums">{formatNaira(shop.subscription.setupFee)}{shop.subscription.setupPaid ? <span className="inline-flex items-center gap-1 rounded-full bg-[#D6F0DE] px-2.5 py-1 text-xs text-[#0A5F34]"><CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5" />Paid</span> : <span className="rounded-full bg-citrus/50 px-2.5 py-1 text-xs">Not yet paid</span>}</dd></div>
-            {shop.subscription.nextInvoice && <div className="flex justify-between py-3"><dt className="text-ink-soft">Next invoice</dt><dd className="font-semibold">{shop.subscription.nextInvoice}</dd></div>}
-          </dl>
-          <p className="text-sm text-ink-soft">Billing is handled by LaundryPadi. To pay your setup fee or ask about your plan, reach us from the Help page.</p>
-        </section>
-      )}
+      {tab === "subscription" && <SubscriptionPanel shop={shop} justPaid={justPaid} />}
     </div>
   );
 }

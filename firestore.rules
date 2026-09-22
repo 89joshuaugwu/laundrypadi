@@ -57,7 +57,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Everything else (counters, etc.) is server-only.
+    // Payments made to LaundryPadi (setup fee, monthly plan). Written only by the Paystack webhook.
+    match /billingPayments/{ref} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Push subscriptions: written only by the server (Admin SDK); nothing for the client to read.
+    match /pushSubscriptions/{id} { allow read, write: if false; }
+
+    // Everything else (counters, billing codes, config) is server-only.
     match /{document=**} { allow read, write: if false; }
   }
 }

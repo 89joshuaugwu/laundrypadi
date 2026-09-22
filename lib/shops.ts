@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { demoShop } from "./demo";
+import { BILLING_ENFORCED, billingOk } from "./billing-shared";
 import { getAdminDb } from "./firebase-admin";
 import type { Service, Shop } from "./types";
 
@@ -42,7 +43,10 @@ export const getShopBySlug = cache(async (slug: string): Promise<Shop | null> =>
     landmark: str(d.landmark),
     days: str(d.days, "Mon \u2013 Sat"),
     hours: str(d.hours, "8:00 AM \u2013 7:00 PM"),
-    accepting: d.accepting !== false,
+    // With billing enforced, an unpaid or cancelled shop stays visible but stops taking online requests.
+    // A suspended shop stops taking online requests the same way an owner-paused shop does,
+    // without the public page saying why.
+    accepting: d.accepting !== false && d.suspended !== true && (!BILLING_ENFORCED || billingOk(d.subscription)),
     whatsapp: str(d.whatsapp),
     coverUrl: str(d.coverUrl),
     services: toServices(d.services).filter((s) => s.active),

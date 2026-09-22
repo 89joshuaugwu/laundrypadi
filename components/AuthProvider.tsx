@@ -7,6 +7,7 @@ export interface Profile {
   role: "customer" | "owner";
   name: string;
   phone: string;
+  disabled: boolean;
 }
 
 interface AuthState {
@@ -38,6 +39,7 @@ async function loadProfile(uid: string): Promise<Profile | null> {
       role: d.role === "owner" ? "owner" : "customer",
       name: typeof d.name === "string" ? d.name : "",
       phone: typeof d.phone === "string" ? d.phone : "",
+      disabled: d.disabled === true,
     };
   } catch {
     return null;
@@ -79,6 +81,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         const p = await loadProfile(u.uid);
         if (cancelled) return;
+        if (p?.disabled) {
+          // An admin locked this account while the person still has an open session here.
+          // Sign out immediately and let /login explain why, instead of leaving a half-alive session.
+          try {
+            window.sessionStorage.setItem("lp-account-disabled", "1");
+          } catch {
+            /* private browsing may block sessionStorage; the sign-out itself still happens */
+          }
+          const { signOut: fbSignOut } = await import("firebase/auth");
+          await fbSignOut(auth);
+          if (!cancelled) {
+            setUser(null);
+            setProfile(null);
+            setReady(true);
+          }
+          return;
+        }
         setProfile(p);
         setReady(true);
       });
